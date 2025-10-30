@@ -2,22 +2,22 @@
   "version": 2,
   "builds": [
     {
-      "src": "server.js",
+      "src": "student-counseling-app/server.js",
       "use": "@vercel/node"
     },
     {
-      "src": "public/**/*",
+      "src": "student-counseling-app/public/**/*",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/server.js"
+      "dest": "student-counseling-app/server.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/public/$1"
+      "dest": "student-counseling-app/public/$1"
     }
   ]
 }
