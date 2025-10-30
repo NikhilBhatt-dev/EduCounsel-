@@ -525,10 +525,11 @@ if (!fs.existsSync(publicDir)) {
   fs.mkdirSync(publicDir);
 }
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Visit http://localhost:${PORT} to access the application`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running locally on port ${PORT}`);
+  });
+}
 
-module.exports = app;
+// Export the Express app for Vercel
 module.exports = app;

@@ -1,6 +1,6 @@
 # File Tree: student-counseling-app
 
-**Generated:** 10/29/2025, 10:33:18 PM
+**Generated:** 10/30/2025, 8:55:25 PM
 **Root Path:** `c:\Project\student-counseling-app`
 
 ```
@@ -17,14 +17,11 @@
 │   │   ├── 🌐 index.html
 │   │   ├── 🌐 login.html
 │   │   └── 🌐 signup.html
-│   ├── 📁 uploads
-│   │   ├── 📁 offers
-│   │   ├── 📁 receipts
-│   │   └── 📕 1761724012107-215479040.pdf
 │   ├── ⚙️ package-lock.json
 │   ├── ⚙️ package.json
 │   └── 📄 server.js
-└── ⚙️ .gitignore
+├── ⚙️ .gitignore
+└── ⚙️ vercel.json
 ```
 
 ---

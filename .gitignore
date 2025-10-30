@@ -17,3 +17,8 @@ node_modules/
 # Next.js build output
 .next
 out
+
+
+node_modules
+.env
+uploads
