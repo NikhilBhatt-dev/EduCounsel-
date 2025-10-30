@@ -67,9 +67,16 @@
             
             const errorDiv = document.getElementById('errorMessage');
             const successDiv = document.getElementById('successMessage');
+
+            const baseURL =
+            window.location.hostname === 'localhost'
+                ? 'http://localhost:3000'
+                : 'https://student-counseling-app.vercel.app'; 
             
             try {
-                const response = await fetch('/api/register', {
+              const response = await fetch(`${baseURL}/api/register`, {
+
+
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
