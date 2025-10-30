@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - EduCounsel</title>
+    <link rel="stylesheet" href="./css/admin.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">EduCounsel</div>
+            <div class="nav-user">
+                <span id="adminName">Loading...</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 id="totalStudents">0</h3>
+                <p>Total Applications</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="seatsAllocated">0</h3>
+                <p>Seats Allocated</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="paymentsVerified">0</h3>
+                <p>Payments Verified</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="admissionsComplete">0</h3>
+                <p>Admissions Complete</p>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="content-header">
+                <h2>Student Management</h2>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search students..." onkeyup="filterTable()">
+                    <button class="btn btn-small" onclick="refreshData()">Refresh</button>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Status:</label>
+                    <select id="statusFilter" onchange="filterTable()">
+                        <option value="">All</option>
+                        <option value="pending">Pending</option>
+                        <option value="allocated">Allocated</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="paid">Payment Submitted</option>
+                        <option value="verified">Verified</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Branch:</label>
+                    <select id="branchFilter" onchange="filterTable()">
+                        <option value="">All Branches</option>
+                        <option value="Computer Science Engineering">Computer Science</option>
+                        <option value="Electronics Engineering">Electronics</option>
+                        <option value="Mechanical Engineering">Mechanical</option>
+                        <option value="Civil Engineering">Civil</option>
+                        <option value="Information Technology">IT</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Rank Range:</label>
+                    <select id="rankFilter" onchange="filterTable()">
+                        <option value="">All Ranks</option>
+                        <option value="1-10">Top 10</option>
+                        <option value="1-50">Top 50</option>
+                        <option value="1-100">Top 100</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Students Table -->
+            <div class="table-container">
+                <table class="students-table" id="studentsTable">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Total Marks</th>
+                            <th>Percentage</th>
+                            <th>Preferences</th>
+                            <th>Allocated Branch</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentsTableBody">
+                        <tr>
+                            <td colspan="10" style="text-align: center; padding: 2rem;">
+                                Loading students data...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Details Modal -->
+    <div id="studentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Student Details</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="studentDetailsContent">
+                <!-- Student details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Seat Allocation Modal -->
+    <div id="seatModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Allocate Seat</h2>
+                <span class="close" onclick="closeSeatModal()">&times;</span>
+            </div>
+            <form id="seatAllocationForm">
+                <input type="hidden" id="studentId" name="studentId">
+                <div class="form-group">
+                    <label for="allocatedBranch">Select Branch:</label>
+                    <select id="allocatedBranch" name="allocatedBranch" required>
+                        <option value="">Select Branch</option>
+                        <option value="Computer Science Engineering">Computer Science Engineering</option>
+                        <option value="Electronics Engineering">Electronics Engineering</option>
+                        <option value="Mechanical Engineering">Mechanical Engineering</option>
+                        <option value="Civil Engineering">Civil Engineering</option>
+                        <option value="Information Technology">Information Technology</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn">Allocate Seat</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payment Verification Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Verify Payment</h2>
+                <span class="close" onclick="closePaymentModal()">&times;</span>
+            </div>
+            <div id="paymentDetailsContent">
+                <!-- Payment details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let studentsData = [];
+        let filteredData = [];
+        let currentUser = null;
+
+        // Initialize admin dashboard
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check authentication
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            
+            if (!token || !user.id) {
+                window.location.href = '/login';
+                return;
+            }
+
+            if (user.role !== 'admin') {
+                window.location.href = '/dashboard';
+                return;
+            }
+
+            currentUser = user;
+            document.getElementById('adminName').textContent = user.name;
+
+            // Load students data
+            await loadStudentsData();
+        });
+
+        // Load students data from API
+        async function loadStudentsData() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/admin/students', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    studentsData = await response.json();
+                    filteredData = [...studentsData];
+                    updateStatistics();
+                    renderStudentsTable();
+                } else {
+                    console.error('Failed to load students data');
+                    document.getElementById('studentsTableBody').innerHTML = `
+                        <tr>
+                            <td colspan="10" style="text-align: center; padding: 2rem; color: #e53e3e;">
+                                Failed to load students data. Please try again.
+                            </td>
+                        </tr>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading students:', error);
+                document.getElementById('studentsTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="10" style="text-align: center; padding: 2rem; color: #e53e3e;">
+                            Network error. Please check your connection and try again.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            const totalStudents = studentsData.length;
+            const seatsAllocated = studentsData.filter(s => s.allocatedBranch).length;
+            const paymentsVerified = studentsData.filter(s => s.paymentStatus === 'verified').length;
+            const admissionsComplete = studentsData.filter(s => s.paymentStatus === 'verified' && s.offerLetter).length;
+
+            document.getElementById('totalStudents').textContent = totalStudents;
+            document.getElementById('seatsAllocated').textContent = seatsAllocated;
+            document.getElementById('paymentsVerified').textContent = paymentsVerified;
+            document.getElementById('admissionsComplete').textContent = admissionsComplete;
+        }
+
+        // Render students table
+        function renderStudentsTable() {
+            const tbody = document.getElementById('studentsTableBody');
+            
+            if (filteredData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" style="text-align: center; padding: 2rem; color: #718096;">
+                            No students found matching the current filters.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filteredData.map(student => {
+                const rankBadgeClass = getRankBadgeClass(student.rank);
+                const statusBadge = getStatusBadge(student);
+                const preferences = student.branchPreferences ? student.branchPreferences.slice(0, 2).join(', ') : 'Not specified';
+                
+                return `
+                    <tr>
+                        <td>
+                            <span class="rank-badge ${rankBadgeClass}">
+                                #${student.rank || 'N/A'}
+                            </span>
+                        </td>
+                        <td>${student.userId.name}</td>
+                        <td>${student.userId.email}</td>
+                        <td>${student.userId.phone}</td>
+                        <td>${student.plus2Marks.total}/300</td>
+                        <td>${student.plus2Marks.percentage.toFixed(2)}%</td>
+                        <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis;" title="${preferences}">
+                            ${preferences}
+                        </td>
+                        <td>${student.allocatedBranch || 'Not allocated'}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <button class="btn btn-small btn-info" onclick="showStudentDetails('${student._id}')">
+                                View
+                            </button>
+                            ${getActionButtons(student)}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Get rank badge class
+        function getRankBadgeClass(rank) {
+            if (rank <= 10) return 'top-10';
+            if (rank <= 50) return 'top-50';
+            return '';
+        }
+
+        // Get status badge
+        function getStatusBadge(student) {
+            if (student.paymentStatus === 'verified') {
+                return '<span class="status-badge status-paid">Admission Complete</span>';
+            }
+            if (student.paymentStatus === 'submitted') {
+                return '<span class="status-badge status-accepted">Payment Submitted</span>';
+            }
+            if (student.seatAccepted) {
+                return '<span class="status-badge status-accepted">Seat Accepted</span>';
+            }
+            if (student.allocatedBranch) {
+                return '<span class="status-badge status-allocated">Seat Allocated</span>';
+            }
+            return '<span class="status-badge status-pending">Pending</span>';
+        }
+
+        // Get action buttons based on student status
+        function getActionButtons(student) {
+            let buttons = '';
+
+            if (!student.allocatedBranch) {
+                buttons += `
+                    <button class="btn btn-small btn-success" onclick="showSeatAllocation('${student._id}')">
+                        Allocate
+                    </button>
+                `;
+            }
+
+            if (student.paymentStatus === 'submitted') {
+                buttons += `
+                    <button class="btn btn-small btn-warning" onclick="showPaymentVerification('${student._id}')">
+                        Verify Payment
+                    </button>
+                `;
+            }
+
+            return buttons;
+        }
+
+        // Filter table based on search and filters
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const branchFilter = document.getElementById('branchFilter').value;
+            const rankFilter = document.getElementById('rankFilter').value;
+
+            filteredData = studentsData.filter(student => {
+                // Search filter
+                const matchesSearch = !searchTerm || 
+                    student.userId.name.toLowerCase().includes(searchTerm) ||
+                    student.userId.email.toLowerCase().includes(searchTerm) ||
+                    student.userId.phone.includes(searchTerm);
+
+                // Status filter
+                const matchesStatus = !statusFilter || getStudentStatus(student) === statusFilter;
+
+                // Branch filter
+                const matchesBranch = !branchFilter || 
+                    (student.allocatedBranch && student.allocatedBranch === branchFilter);
+
+                // Rank filter
+                let matchesRank = true;
+                if (rankFilter) {
+                    const [min, max] = rankFilter.split('-').map(Number);
+                    matchesRank = student.rank >= min && student.rank <= max;
+                }
+
+                return matchesSearch && matchesStatus && matchesBranch && matchesRank;
+            });
+
+            renderStudentsTable();
+        }
+
+        // Get student status for filtering
+        function getStudentStatus(student) {
+            if (student.paymentStatus === 'verified') return 'verified';
+            if (student.paymentStatus === 'submitted') return 'paid';
+            if (student.seatAccepted) return 'accepted';
+            if (student.allocatedBranch) return 'allocated';
+            return 'pending';
+        }
+
+        // Show student details modal
+        function showStudentDetails(studentId) {
+            const student = studentsData.find(s => s._id === studentId);
+            if (!student) return;
+
+            const content = `
+                <div class="student-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Name</div>
+                        <div class="detail-value">${student.userId.name}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Email</div>
+                        <div class="detail-value">${student.userId.email}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Phone</div>
+                        <div class="detail-value">${student.userId.phone}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Rank</div>
+                        <div class="detail-value">#${student.rank || 'Not assigned'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Date of Birth</div>
+                        <div class="detail-value">${student.personalInfo?.dateOfBirth ? new Date(student.personalInfo.dateOfBirth).toLocaleDateString() : 'Not provided'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Gender</div>
+                        <div class="detail-value">${student.personalInfo?.gender || 'Not provided'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Category</div>
+                        <div class="detail-value">${student.personalInfo?.category || 'Not provided'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Address</div>
+                        <div class="detail-value">${student.personalInfo?.address || 'Not provided'}</div>
+                    </div>
+                </div>
+
+                <h3 style="margin: 2rem 0 1rem 0; color: #e53e3e;">Academic Performance</h3>
+                <div class="student-details">
+                    <div class="detail-item">
+                        <div class="detail-label">High School Total</div>
+                        <div class="detail-value">${student.highSchoolMarks.total}/500 (${student.highSchoolMarks.percentage.toFixed(2)}%)</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">10+2 Total</div>
+                        <div class="detail-value">${student.plus2Marks.total}/300 (${student.plus2Marks.percentage.toFixed(2)}%)</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Physics</div>
+                        <div class="detail-value">${student.plus2Marks.physics}/100</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Chemistry</div>
+                        <div class="detail-value">${student.plus2Marks.chemistry}/100</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Mathematics</div>
+                        <div class="detail-value">${student.plus2Marks.mathematics}/100</div>
+                    </div>
+                </div>
+
+                <h3 style="margin: 2rem 0 1rem 0; color: #e53e3e;">Branch Preferences</h3>
+                <div class="student-details">
+                    <div class="detail-item">
+                        <div class="detail-label">First Preference</div>
+                        <div class="detail-value">${student.branchPreferences?.[0] || 'Not specified'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Second Preference</div>
+                        <div class="detail-value">${student.branchPreferences?.[1] || 'Not specified'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Allocated Branch</div>
+                        <div class="detail-value">${student.allocatedBranch || 'Not allocated'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Seat Status</div>
+                        <div class="detail-value">${student.seatAccepted ? 'Accepted' : 'Not accepted'}</div>
+                    </div>
+                </div>
+
+                <h3 style="margin: 2rem 0 1rem 0; color: #e53e3e;">Payment Status</h3>
+                <div class="student-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Payment Status</div>
+                        <div class="detail-value">${student.paymentStatus}</div>
+                    </div>
+                    ${student.paymentReceipt ? `
+                    <div class="detail-item">
+                        <div class="detail-label">Payment Receipt</div>
+                        <div class="detail-value">
+                            <a href="/uploads/${student.paymentReceipt}" target="_blank" class="btn btn-small">View Receipt</a>
+                        </div>
+                    </div>
+                    ` : ''}
+                    ${student.offerLetter ? `
+                    <div class="detail-item">
+                        <div class="detail-label">Offer Letter</div>
+                        <div class="detail-value">
+                            <a href="/uploads/${student.offerLetter}" target="_blank" class="btn btn-small">View Offer Letter</a>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+
+            document.getElementById('studentDetailsContent').innerHTML = content;
+            document.getElementById('studentModal').style.display = 'block';
+        }
+
+        // Show seat allocation modal
+        function showSeatAllocation(studentId) {
+            document.getElementById('studentId').value = studentId;
+            document.getElementById('allocatedBranch').value = '';
+            document.getElementById('seatModal').style.display = 'block';
+        }
+
+        // Show payment verification modal
+        function showPaymentVerification(studentId) {
+            const student = studentsData.find(s => s._id === studentId);
+            if (!student) return;
+
+            const content = `
+                <div class="student-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Student Name</div>
+                        <div class="detail-value">${student.userId.name}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Allocated Branch</div>
+                        <div class="detail-value">${student.allocatedBranch}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Payment Receipt</div>
+                        <div class="detail-value">
+                            <a href="/uploads/${student.paymentReceipt}" target="_blank" class="btn">View Receipt</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                    <button class="btn btn-success" onclick="verifyPayment('${student._id}', 'verified')">
+                        Approve Payment
+                    </button>
+                    <button class="btn" onclick="verifyPayment('${student._id}', 'pending')">
+                        Reject Payment
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('paymentDetailsContent').innerHTML = content;
+            document.getElementById('paymentModal').style.display = 'block';
+        }
+
+        // Handle seat allocation form submission
+        document.getElementById('seatAllocationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const studentId = document.getElementById('studentId').value;
+            const branch = document.getElementById('allocatedBranch').value;
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/admin/allocate-seat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ studentId, branch })
+                });
+
+                if (response.ok) {
+                    alert('Seat allocated successfully!');
+                    closeSeatModal();
+                    await loadStudentsData();
+                } else {
+                    const data = await response.json();
+                    alert('Error: ' + (data.message || 'Failed to allocate seat'));
+                }
+            } catch (error) {
+                alert('Network error. Please try again.');
+            }
+        });
+
+        // Verify payment
+        async function verifyPayment(studentId, status) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/admin/verify-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ studentId, status })
+                });
+
+                if (response.ok) {
+                    alert('Payment status updated successfully!');
+                    closePaymentModal();
+                    await loadStudentsData();
+                } else {
+                    const data = await response.json();
+                    alert('Error: ' + (data.message || 'Failed to update payment status'));
+                }
+            } catch (error) {
+                alert('Network error. Please try again.');
+            }
+        }
+
+        // Modal functions
+        function closeModal() {
+            document.getElementById('studentModal').style.display = 'none';
+        }
+
+        function closeSeatModal() {
+            document.getElementById('seatModal').style.display = 'none';
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const studentModal = document.getElementById('studentModal');
+            const seatModal = document.getElementById('seatModal');
+            const paymentModal = document.getElementById('paymentModal');
+            
+            if (event.target == studentModal) {
+                closeModal();
+            } else if (event.target == seatModal) {
+                closeSeatModal();
+            } else if (event.target == paymentModal) {
+                closePaymentModal();
+            }
+        };
+
+        // Refresh data
+        async function refreshData() {
+            await loadStudentsData();
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
+    </script>
+</body>
+</html>

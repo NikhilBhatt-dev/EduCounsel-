@@ -1,0 +1,146 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+    <title>EduCounsel</title>
+    
+       <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+          background: linear-gradient(to right, #816dff, #000000);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 50px;
+      background: white;
+      color: #333;
+    }
+
+    header .logo {
+      font-weight: bold;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+    }
+
+    header .logo::before {
+      content: '🎓';
+      margin-right: 8px;
+    }
+
+    nav {
+      display: flex;
+      gap: 20px;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: #2575fc;
+      font-weight: 500;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .main-content h1 {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+
+    .main-content p {
+      font-size: 18px;
+      margin-bottom: 30px;
+      color: #e0e0e0;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 20px;
+    }
+
+    .buttons a {
+      padding: 12px 24px;
+      text-decoration: none;
+      border-radius: 30px;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+
+    .student-btn {
+      background: white;
+      color: #2575fc;
+    }
+
+    .student-btn:hover {
+      background: #f0f0f0;
+    }
+
+    .admin-btn {
+      border: 2px solid white;
+      color: white;
+    }
+
+    .admin-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+  </style> 
+</head>
+<body>
+    <header>
+    <div class="logo">EduCounsel</div>
+    <nav>
+      <a href="login.html">Login</a>
+      <a href="signup.html">Sign Up</a>
+    </nav>
+  </header>
+
+    <div class="main-content">
+    <h1>Welcome to EduCounsel</h1>
+    <p>Your Gateway to Academic Excellence and Career Guidance</p>
+    <div class="buttons">
+      <a href="login.html" class="student-btn">Student Login</a>
+      <a href="login.html" class="admin-btn">Admin Login</a>
+    </div>
+
+    </div>
+
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
