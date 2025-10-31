@@ -137,8 +137,9 @@ const studentSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-const User = mongoose.model('User', userSchema);
-const Student = mongoose.model('Student', studentSchema);
+const User = mongoose.models.User || mongoose.model('User', userSchema);
+const Student = mongoose.models.Student || mongoose.model('Student', studentSchema);
+
 
 // Authentication middleware
 const authenticateToken = (req, res, next) => {
