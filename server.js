@@ -26,7 +26,7 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'"],
       scriptSrcAttr: ["'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:", "blob:"],
-      connectSrc: ["'self'", "ws:", "wss:"], // Allow WebSocket connections for DevTools
+      connectSrc: ["'self'", "http://localhost:3000", "https://student-counseling-app.vercel.app", "ws:", "wss:"],
       fontSrc: ["'self'"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
